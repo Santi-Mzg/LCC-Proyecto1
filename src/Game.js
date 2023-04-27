@@ -14,7 +14,7 @@ function Game() {
   const [score, setScore] = useState(0);
   const [path, setPath] = useState([]);
   const [waiting, setWaiting] = useState(false);
-  const [nextSquare, setNextSquare] = useState(0);
+  const [nextSquareValue, setNextSquareValue] = useState(0);
 
   useEffect(() => {
     // This is executed just once, after the first render.
@@ -44,7 +44,7 @@ function Game() {
       return;
     }
     setPath(newPath);
-    setNextSquare(joinResult(newPath, grid, numOfColumns)); // Muestra el valor que se va "generando" al ir conectando bloques progresivamente.
+    setNextSquareValue(joinResult(newPath, grid, numOfColumns)); // Actualiza el valor que se va "generando" al ir conectando bloques progresivamente.
     console.log(JSON.stringify(newPath));
   }
 
@@ -76,7 +76,7 @@ function Game() {
     pengine.query(queryS, (success, response) => {
       if (success) {
         setScore(score + joinResult(path, grid, numOfColumns));
-        setNextSquare(0);
+        setNextSquareValue(0);
         setPath([]);
         animateEffect(response['RGrids']);
       } else {
@@ -109,7 +109,7 @@ function Game() {
       <div className="header">
         <div className="score">{score}</div>
         <Square
-            value={nextSquare}
+            value={nextSquareValue}
             onClick={() => null}
             onMouseEnter={() => null}
             className={"result"}
