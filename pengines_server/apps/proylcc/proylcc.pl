@@ -83,14 +83,17 @@ find_each(Grid, NumOfColumns, Square, Pos, RGrid1) :-
 join(Grid, NumOfColumns, Path, RGrids):-
 	Grid = [N | Ns],
 	RGrids = [RGrid1, RGrid1],
+	remove_and_add_new(Grid, NumOfColumns, Path, RGrid1).
+	%fall(Grid, NumOfColumns, Pos, RGrid2).
+
+% Caso base donde ya se recorrió toda la grilla.
+remove_and_add_new(Grid, NumOfColumns, Path, RGrid1) :-
 	Pos = 0,
 	Val = 0,
 	remove(Grid, NumOfColumns, Pos, Path, Val, FVal, RG1),
-	calcular_valor(FVal, Res),
-	cambiar_elemento(1, Res, RG1, RGrid1).
-	%gravity(Grid, NumOfColumns, Pos, RGrid2).
+	next_power_of_2(FVal, Res),
+	change_element(1, Res, RG1, RGrid1).
 
-% Caso base donde ya se recorrió toda la grilla.
 remove(Grid, NumOfColumns, Pos, Path, Val, FVal, RGrid1):-
 	Grid = [],
 	RGrid1 = [],
@@ -113,11 +116,12 @@ remove_aux(Grid, NumOfColumns, Pos, Path, Val, RGrid1) :-
 	Grid = [G | Gs],
 	RGrid1 = [G | _].
 
+% Caso base donde el square en cuestión es el último del Path y dónde debe modificarse su valor luego, no hacerse 0.
 remove_aux(Grid, NumOfColumns, Pos, Path, Val, RGrid1) :-
 	Path = [[F, C]],
 	Pos is F*NumOfColumns + C,
 	Grid = [Val | Gs],
-	RGrid1 = [1 | _].
+	RGrid1 = [1 | _]. % 1 representa la posición donde termina el Path y debe calcularse su nuevo valor.
 
 % Caso base donde el square en cuestión forma parte del Path y se cambia a 0.
 remove_aux(Grid, NumOfColumns, Pos, Path, Val, RGrid1) :-
@@ -132,16 +136,16 @@ remove_aux(Grid, NumOfColumns, Pos, Path, Val, RGrid1) :-
 	Path = [P | Ps],
 	remove_aux(Grid, NumOfColumns, Pos, Ps, Val, RGrid1). 
 	
-calcular_valor(FVal, Res) :-
+next_power_of_2(FVal, Res) :-
 	P = 2,
-	calcular_valor_aux(FVal, P, Res).
-calcular_valor_aux(FVal, P, Res) :-
+	next_power_of_2_aux(FVal, P, Res).
+next_power_of_2_aux(FVal, P, Res) :-
 	Res is 2^P,
 	Res >= FVal.
-calcular_valor_aux(FVal, P, Res) :-
+next_power_of_2_aux(FVal, P, Res) :-
 	PS is P+1,
-	calcular_valor_aux(FVal, PS, Res).
+	next_power_of_2_aux(FVal, PS, Res).
 
-cambiar_elemento(_, [], []).
-cambiar_elemento(E1, E2, [E1|L], [E2|L]).
-cambiar_elemento(E1, E2, [X|L], [X|LR]) :- E1\=X, cambiar_elemento(E1, E2, L, LR).
+change_element(_, [], []).
+change_element(E1, E2, [E1|L], [E2|L]).
+change_element(E1, E2, [X|L], [X|LR]) :- E1\=X, change_element(E1, E2, L, LR).
