@@ -8,83 +8,13 @@
  * join(+Grid, +NumOfColumns, +Path, -RGrids)
  * RGrids es la lista de grillas representando el efecto, en etapas, de combinar las celdas del camino Path
  * en la grilla Grid, con número de columnas NumOfColumns. El número 0 representa que la celda está vacía.
-
-
-join(Grid, _NumOfColumns, _Path, RGrids):-
-	Grid = [N | Ns],	% La implementación actual es simplemente a modo de muestra, y no tiene sentido, debe reepmplazarla
-	N2 is N * 2,		% por una implementación válida.
-	RGrids = [[0 | Ns], [N2 | Ns]].
 */
-
-/*
-join(Grid, NumOfColumns, Path, RGrids):-
-	Grid = [N | Ns],
-	RGrids = [RGrid1, RGrid1],
-	find(Grid, NumOfColumns, Path, Pos, RGrid1).
-
-
-copiar_resto([], []).
-
-copiar_resto(Grid, RGrid1) :-
-	Grid = [N | Ns],
-	RGrid1 = [N | Gs],
-	copiar_resto(Ns, Gs).
-
-copiar_resto(Grid, RGrid1) :-
-	Grid = [N | Ns],
-	RGrid1 = [0 | Gs],
-	copiar_resto(Ns, Gs).
-
-find(Grid, NumOfColumns, Path, Pos, RGrid1) :-
-	Path = [],
-	copiar_resto(Grid, RGrid1).
-
-find(Grid, NumOfColumns, Path, Pos, RGrid1) :-
-	Path = [P | Ps],
-	Pos = 0,
-	find_each(Grid, NumOfColumns, P, Pos, RGrid1),
-	find(Grid, NumOfColumns, Ps, Pos, RGrid1).
-
-% Caso donde RGrid se encuentra la posición a borrar y se la define en 0.
-find_each(Grid, NumOfColumns, Square, Pos, RGrid1) :-
-	Square = [L, C],
-	Pos is L*NumOfColumns + C,
-	RGrid1 = [0 | _].
-	
-
-% Caso donde se encuentra la posición a borrar ya definida en otro valor y se la redefine en 0.
-find_each(Grid, NumOfColumns, Square, Pos, RGrid1) :-
-	Square = [L, C],
-	Pos is L*NumOfColumns + C,
-	RGrid1 = [G | Gs],
-	concat([0], Gs, RGrid1).
-	
-
-% Caso de recorrido donde RGrid1 no tiene definido ningún elemento y se copian los de Grid.
-% O también cuando se recorren posiciones que no fueron alteradas.
-find_each(Grid, NumOfColumns, Square, Pos, RGrid1) :-
-	Grid = [N | Ns],
-	RGrid1 = [N | Gs],
-	PosSig is Pos+1,
-	find_each(Ns, NumOfColumns, Square, PosSig, Gs).
-
-% Caso de recorrido donde RGrid1 ya está definido parcialmente y se le borró al menos una posición (se hizo 0).
-find_each(Grid, NumOfColumns, Square, Pos, RGrid1) :-
-	RGrid1 = [G | Gs],
-	G=0,
-	Grid = [N | Ns],
-	PosSig is Pos+1,
-	find_each(Ns, NumOfColumns, Square, PosSig, Gs).
-
-*/
-
-% Otra implementacion.
 
 join(Grid, NumOfColumns, Path, RGrids):-
 	Grid = [N | Ns],
-	RGrids = [RGrid1, RGrid1],
-	remove_and_add_new(Grid, NumOfColumns, Path, RGrid1).
-	%fall(Grid, NumOfColumns, Pos, RGrid2).
+	RGrids = [RGrid1, RGrid2],
+	remove_and_add_new(Grid, NumOfColumns, Path, RGrid1),
+	fall_and_generate_news(RGrid1, NumOfColumns, Path, RGrid2).
 
 % Caso base donde ya se recorrió toda la grilla.
 remove_and_add_new(Grid, NumOfColumns, Path, RGrid1) :-
@@ -149,3 +79,62 @@ next_power_of_2_aux(FVal, P, Res) :-
 change_element(_, [], []).
 change_element(E1, E2, [E1|L], [E2|L]).
 change_element(E1, E2, [X|L], [X|LR]) :- E1\=X, change_element(E1, E2, L, LR).
+
+%
+%
+%
+%
+%
+fall_and_generate_news(Grid, NumOfColumns, Path, RGrid2) :-
+	split_grid(Grid, Cols),
+	Cols = [C | _Cs],
+	length(C, NumOfRows),
+	fallOnColumns(Cols, NumOfRows, RCols),
+	concatColumns(RCols, RGrid2).
+
+
+split_grid(Grid, Columns) :-
+	Grid = [],
+	Columns = [[], [], [], [], []].
+
+split_grid(Grid, Columns) :-
+	Grid = [G0, G1, G2, G3, G4 | Gs],
+	Columns = [[G0 | C0s], [G1 | C1s], [G2 | C2s], [G3 | C3s], [G4 | C4s]],
+	split_grid(Gs, [C0s, C1s, C2s, C3s, C4s]).
+
+fallOnColumns(Cols, NumOfRows, RCols) :-
+	Cols = [],
+	RCols = [].
+
+fallOnColumns(Cols, NumOfRows, RCols) :-
+	Cols = [C | Cs],
+	RCols = [RC | RCs],
+	findall(X, (member(X, C), X \= 0), Rta),
+	addRandoms(Rta, NumOfRows, RC),
+	fallOnColumns(Cs, NumOfRows, RCs).
+
+addRandoms(Col, NumOfRows, RCol) :-
+	length(Col, Length),
+	RandomsToAdd is NumOfRows - Length,
+	Options = [2, 4, 8, 16, 32, 64],
+	addRandomsAux(Col, RandomsToAdd, Options, RCol).
+
+addRandomsAux(Col, RandomsToAdd, Options, RCol) :-
+	RandomsToAdd = 0,
+	RCol = Col.
+
+addRandomsAux(Col, RandomsToAdd, Options, RCol) :-
+	RandomsToAdd > 0,
+	RCol = [R | Rs],
+	random_member(R, Options),
+	RandomsToAddN is RandomsToAdd - 1,
+	addRandomsAux(Col, RandomsToAddN, Options, Rs).
+
+concatColumns(Cols, RGrid) :-
+	Cols = [[], [], [], [], []],
+	RGrid = [].
+
+concatColumns(Cols, RGrid) :-
+	Cols = [[C0 | C0s], [C1 | C1s], [C2 | C2s], [C3 | C3s], [C4 | C4s]],
+	RGrid = [C0, C1, C2, C3, C4 | Rs],
+	concatColumns([C0s, C1s, C2s, C3s, C4s], Rs).
