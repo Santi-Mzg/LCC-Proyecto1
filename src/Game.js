@@ -14,6 +14,7 @@ function Game() {
   const [score, setScore] = useState(0);
   const [path, setPath] = useState([]);
   const [waiting, setWaiting] = useState(false);
+  const [drawingPath, setDrawingPath] = useState(false);
   const [nextSquareValue, setNextSquareValue] = useState(0);
 
   useEffect(() => {
@@ -42,6 +43,12 @@ function Game() {
     // No effect if waiting.
     if (waiting) {
       return;
+    }
+    if (newPath.length === 0) { // Caso en donde se cancela el recorrido Path.
+      setDrawingPath(false);
+    }
+    else {
+      setDrawingPath(true);
     }
     setPath(newPath);
     setNextSquareValue(joinResult(newPath, grid, numOfColumns)); // Actualiza el valor que se va "generando" al ir conectando bloques progresivamente.
@@ -72,6 +79,7 @@ function Game() {
     const gridS = JSON.stringify(grid);
     const pathS = JSON.stringify(path);
     const queryS = "join(" + gridS + "," + numOfColumns + "," + pathS + ", RGrids)";
+    setDrawingPath(false);
     setWaiting(true);
     pengine.query(queryS, (success, response) => {
       if (success) {
@@ -104,26 +112,41 @@ function Game() {
   if (grid === null) {
     return null;
   }
-  return (
-    <div className="game">
-      <div className="header">
-        <div className="score">{score}</div>
-        <Square
-            value={nextSquareValue}
-            onClick={() => null}
-            onMouseEnter={() => null}
-            className={"result"}
+  if (drawingPath) {
+    return (
+      <div className="game">
+        <div className="header"> 
+          <Square
+              value={nextSquareValue}
+              className={"result"}
+          />
+        </div>
+        <Board
+          grid={grid}
+          numOfColumns={numOfColumns}
+          path={path}
+          onPathChange={onPathChange}
+          onDone={onPathDone}
         />
       </div>
-      <Board
-        grid={grid}
-        numOfColumns={numOfColumns}
-        path={path}
-        onPathChange={onPathChange}
-        onDone={onPathDone}
-      />
-    </div>
-  );
+    );
+  }
+  else {
+    return (
+      <div className="game">
+        <div className="header">
+          <div className="score">{score}</div>
+        </div>
+        <Board
+          grid={grid}
+          numOfColumns={numOfColumns}
+          path={path}
+          onPathChange={onPathChange}
+          onDone={onPathDone}
+        />
+      </div>
+    );
+  }
 }
 
 export default Game;
