@@ -25,7 +25,7 @@ combinePath(Grid, NumOfColumns, Path, RGrid1) :-
 	Pos = 0,
 	Val = 0,
 	remove(Grid, NumOfColumns, Pos, Path, Val, FVal, RGrid),
-	nextPowerOf2(FVal, 2, Res),
+	nextPowerOf2(FVal, 1, Res),
 	changeElement(1, Res, RGrid, RGrid1).
 
 /**
@@ -140,7 +140,8 @@ fallOnColumns(Cols, _NumOfRows, RCols) :-
 fallOnColumns(Cols, NumOfRows, RCols) :-
 	Cols = [C | Cs],
 	RCols = [RC | RCs],
-	findall(X, (member(X, C), X \= 0), Rta), % Se extraen los elementos en 0 y se compactan (caen) el resto de elementos de la columna.
+	%findall(X, (member(X, C), X \= 0), Rta), % Se extraen los elementos en 0 y se compactan (caen) el resto de elementos de la columna.
+	delete(C, 0, Rta),
 	addRandoms(Rta, NumOfRows, RC), % Si es necesario genera nuevos elementos aleatorios al tope de la columna.
 	fallOnColumns(Cs, NumOfRows, RCs).
 
@@ -182,3 +183,112 @@ concatColumns(Cols, RGrid) :-
 	Cols = [[C0 | C0s], [C1 | C1s], [C2 | C2s], [C3 | C3s], [C4 | C4s]],
 	RGrid = [C0, C1, C2, C3, C4 | Rs],
 	concatColumns([C0s, C1s, C2s, C3s, C4s], Rs).
+
+/*
+	Informe: 
+	Como funciona el juego.
+	Prolog: explicar todo código prolog, razonamiento y funcionamiento, con ejemplos (imágenes)
+	React: que info se pasa del cliente al servidor y como se actualizan los estados.
+
+[64,4,64,32,16,64,8,16,2,32,2,4,64,64,2,2,4,32,16,4,16,4,16,16,16,16,64,2,32,32,64,2,64,32,64,32,2,64,32,4]
+*/
+
+boosterColapsarIguales(Grid, NumOfColumns, RGrids) :-
+	Pos = 0,
+	LMarcadosTemp = [],
+	RGrids = [RGrid1, RGrid2],
+	identificarGrupos(Grid, Grid, NumOfColumns, Pos, LMarcadosTemp, LMarcadosGlobal, RPaths),
+	colapsarGrupos(Grid, NumOfColumns, RPaths, RGrid1),
+	fall(RGrid1, RGrid2).
+
+colapsarGrupos(Grid, NumOfColumns, RPaths, RGrid1) :-
+	RPaths = [],
+	RGrid1 = Grid.	
+
+colapsarGrupos(Grid, NumOfColumns, RPaths, RGrid1) :-
+	RPaths = [P | Ps],
+	length(P, 1),
+	colapsarGrupos(Grid, NumOfColumns, Ps, RGrid1).
+
+colapsarGrupos(Grid, NumOfColumns, RPaths, RGrid1) :-
+	RPaths = [P | Ps],
+	length(P, Length),
+	Length > 1,
+	%ordenarPath(P, RP),
+	combinePath(Grid, NumOfColumns, RP, RGrid),
+	colapsarGrupos(RGrid, NumOfColumns, Ps, RGrid1).
+
+ordenarPath(Path, RPath) :-
+	max_member(masAbajoYDerecha, RPos, Path),
+	delete(Path, RPos, PathAux),
+	length(Path, Length),
+	nth1(Length, RPath, RPos, PathAux).
+	
+masAbajoYDerecha([Fila1, Col1], [Fila2, Col2]) :-
+	Val1 is Fila1 + Col1,
+	Val2 is Fila2 + Col2,
+	Val2 >= Val1.
+
+
+identificarGrupos(Grid, GridOrig, NumOfColumns, Pos, LMarcadosTemp, LMarcadosGlobal, RPaths) :-   
+	Grid = [],
+	RPaths = [],
+	LMarcadosTemp = LMarcadosGlobal.
+	
+identificarGrupos(Grid, GridOrig, NumOfColumns, Pos, LMarcadosTemp, LMarcadosGlobal, RPaths) :- 
+	Grid = [G | Gs],
+	member(Pos, LMarcadosTemp),
+	PosSig is Pos + 1,
+	identificarGrupos(Gs, GridOrig, NumOfColumns, PosSig, LMarcadosTemp, LMarcadosGlobal, RPaths).
+
+identificarGrupos(Grid, GridOrig, NumOfColumns, Pos, LMarcadosTemp, LMarcadosGlobal, RPaths) :- 
+	Grid = [G | Gs],
+	RPaths = [P | RPs],
+	listaDeAdyacencia(Grid, GridOrig, NumOfColumns, Pos, LMarcadosTemp, LMarcadosGlobal, P),
+	PosSig is Pos + 1,
+	identificarGrupos(Gs, GridOrig, NumOfColumns, PosSig, LMarcadosGlobal, LMarcadosGlobalN, RPs).
+
+%
+listaDeAdyacencia(GridAct, GridOrig, NumOfColumns, Pos, LMarcadosTemp, LMarcadosGlobal, LAdy) :-
+	GridAct = [G | Gs],
+	LMarcadosTempN = [Pos | LMarcadosTemp],
+	Fila is Pos // NumOfColumns,
+	Col is Pos - Fila*NumOfColumns,
+	LAdy = [[Fila, Col] | LAs],
+	PosInicial = 0,
+	listaDeAdyacenciaAux(G, GridOrig, GridOrig, NumOfColumns, Fila, Col, PosInicial, LMarcadosTempN, LMarcadosGlobal, LAs).
+
+% No es adyacente y no quedan más adyacentes por recorrer.
+listaDeAdyacenciaAux(E, Grid, GridOrig, NumOfColumns, FilaOrig, ColOrig, Pos, LMarcadosTemp, LMarcadosGlobal, LAdy) :-
+	Grid = [],
+	LAdy = [],
+	LMarcadosGlobal = LMarcadosTemp.
+
+% Si es adyacente, igual pero está marcado.
+listaDeAdyacenciaAux(E, Grid, GridOrig, NumOfColumns, FilaOrig, ColOrig, Pos, LMarcadosTemp, LMarcadosGlobal, LAdy) :-
+	Fila is Pos // NumOfColumns,
+	Col is Pos - Fila*NumOfColumns,
+	1 >= abs(Fila - FilaOrig),
+	1 >= abs(Col - ColOrig),
+	Grid = [E | Gs],
+	member(Pos, LMarcadosTemp),
+	PosSig is Pos + 1,
+	listaDeAdyacenciaAux(E, Gs, GridOrig, NumOfColumns, FilaOrig, ColOrig, PosSig, LMarcadosTemp, LMarcadosGlobal, LAdy).
+
+% Si es adyacente, igual y no está marcado.
+listaDeAdyacenciaAux(E, Grid, GridOrig, NumOfColumns, FilaOrig, ColOrig, Pos, LMarcadosTemp, LMarcadosGlobal, LAdy) :-
+	Fila is Pos // NumOfColumns,
+	Col is Pos - Fila*NumOfColumns,
+	1 >= abs(Fila - FilaOrig),
+	1 >= abs(Col - ColOrig),
+	Grid = [E | Gs],
+	listaDeAdyacencia(Grid, GridOrig, NumOfColumns, Pos, LMarcadosTemp, LMarcadosGlobal, LAdyAux),
+	append(LAdyAux, LAs, LAdy),
+	PosSig is Pos + 1,
+	listaDeAdyacenciaAux(E, Gs, GridOrig, NumOfColumns, FilaOrig, ColOrig, PosSig, LMarcadosGlobal, LMarcadosGlobalN, LAs).
+
+% Si no es adyacente sigue recorriendo.
+listaDeAdyacenciaAux(E, Grid, GridOrig, NumOfColumns, FilaOrig, ColOrig, Pos, LMarcadosTemp, LMarcadosGlobal, LAdy) :-
+	Grid = [G | Gs],
+	PosSig is Pos + 1,
+	listaDeAdyacenciaAux(E, Gs, GridOrig, NumOfColumns, FilaOrig, ColOrig, PosSig, LMarcadosTemp, LMarcadosGlobal, LAdy).

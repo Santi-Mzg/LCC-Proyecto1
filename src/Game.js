@@ -109,6 +109,19 @@ function Game() {
     }
   }
 
+  function boosterColapsarIguales() {
+    const gridS = JSON.stringify(grid);
+    const queryS = "boosterColapsarIguales(" + gridS + "," + numOfColumns + ", RGrids)";
+    setWaiting(true);
+    pengine.query(queryS, (success, response) => {
+      if (success) {
+        animateEffect(response['RGrids']);
+      } else {
+        setWaiting(false);
+      }
+    });
+  }
+
   if (grid === null) {
     return null;
   }
@@ -118,7 +131,6 @@ function Game() {
         <div className="header"> 
           <Square
               value={nextSquareValue}
-              className={"result"}
           />
         </div>
         <Board
@@ -128,6 +140,11 @@ function Game() {
           onPathChange={onPathChange}
           onDone={onPathDone}
         />
+        <div className="keypad"> 
+          <button type="button" onClick={() => boosterColapsarIguales()}>
+            Booster Colapsar Iguales
+          </button>
+        </div>
       </div>
     );
   }
@@ -144,6 +161,11 @@ function Game() {
           onPathChange={onPathChange}
           onDone={onPathDone}
         />
+        <div className="keypad"> 
+          <button type="button" onClick={() => boosterColapsarIguales()} >
+            Booster Colapsar Iguales
+          </button>
+        </div>
       </div>
     );
   }
