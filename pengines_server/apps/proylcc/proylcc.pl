@@ -214,21 +214,29 @@ colapsarGrupos(Grid, NumOfColumns, RPaths, RGrid1) :-
 	RPaths = [P | Ps],
 	length(P, Length),
 	Length > 1,
-	%ordenarPath(P, RP),
+	ordenarPath(P, RP),
 	combinePath(Grid, NumOfColumns, RP, RGrid),
 	colapsarGrupos(RGrid, NumOfColumns, Ps, RGrid1).
 
 ordenarPath(Path, RPath) :-
 	max_member(masAbajoYDerecha, RPos, Path),
 	delete(Path, RPos, PathAux),
-	length(Path, Length),
-	nth1(Length, RPath, RPos, PathAux).
+	insertar_final(RPos, PathAux, RPath).
 	
 masAbajoYDerecha([Fila1, Col1], [Fila2, Col2]) :-
 	Val1 is Fila1 + Col1,
 	Val2 is Fila2 + Col2,
-	Val2 >= Val1.
+	Val2 > Val1.
 
+% Da prioridad a la posición de más abajo sobre la de más a la derecha cuando la suma de fila y columna es igual.
+masAbajoYDerecha([Fila1, Col1], [Fila2, Col2]) :-
+	Val1 is Fila1 + Col1,
+	Val2 is Fila2 + Col2,
+	Val2 = Val1,
+	Fila2 > Fila1.
+
+insertar_final(A, [], [A]).
+insertar_final(A, [E|L1], [E|L2]) :-  insertar_final(A, L1, L2).
 
 identificarGrupos(Grid, GridOrig, NumOfColumns, Pos, LMarcadosTemp, LMarcadosGlobal, RPaths) :-   
 	Grid = [],
