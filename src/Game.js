@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import PengineClient from './PengineClient';
 import Board from './Board';
 import { joinResult } from './util';
-import Square from './Square';
+import HeaderDisplay from './HeaderDisplay';
+import ButtonBooster from './ButtonBooster';
 
 let pengine;
 
@@ -125,14 +126,16 @@ function Game() {
   if (grid === null) {
     return null;
   }
-  if (drawingPath) {
-    return (
-      <div className="game">
-        <div className="header"> 
-          <Square
-              value={nextSquareValue}
-          />
-        </div>
+
+  return (
+    <div className="game">
+      <div className="header">
+        <HeaderDisplay
+          drawingPath={drawingPath}
+          score={score}
+          nextSquareValue={nextSquareValue}
+        />
+      </div>
         <Board
           grid={grid}
           numOfColumns={numOfColumns}
@@ -140,35 +143,15 @@ function Game() {
           onPathChange={onPathChange}
           onDone={onPathDone}
         />
-        <div className="keypad"> 
-          <button type="button" onClick={() => boosterColapsarIguales()}>
-            Booster Colapsar Iguales
-          </button>
-        </div>
-      </div>
-    );
-  }
-  else {
-    return (
-      <div className="game">
-        <div className="header">
-          <div className="score">{score}</div>
-        </div>
-        <Board
-          grid={grid}
-          numOfColumns={numOfColumns}
-          path={path}
-          onPathChange={onPathChange}
-          onDone={onPathDone}
+      <div className="keypad"> 
+        <ButtonBooster
+          onClick={boosterColapsarIguales}
+          disabled={drawingPath || waiting} // Si se está marcando un camino o se está esperando una respuesta de Prolog entonces desactiva el botón.
         />
-        <div className="keypad"> 
-          <button type="button" onClick={() => boosterColapsarIguales()} >
-            Booster Colapsar Iguales
-          </button>
-        </div>
       </div>
-    );
-  }
+    </div>
+  );
 }
+
 
 export default Game;
