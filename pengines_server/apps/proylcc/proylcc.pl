@@ -13,7 +13,7 @@
 join(Grid, NumOfColumns, Path, RGrids):-
 	RGrids = [RGrid1, RGrid2],
 	combinarPath(Grid, NumOfColumns, Path, RGrid1),
-	caida(RGrid1, RGrid2).
+	caida(RGrid1, NumOfColumns, RGrid2).
 
 % Caso base donde ya se recorrió toda la grilla.
 /**
@@ -109,25 +109,43 @@ cambiarElemento(E1, E2, [X|L], [X|LR]) :-
 *  RGrid2 es la grilla donde por 'gravedad' caen los bloques sobre los espacios vacíos (igualados a 0).
 *  En los casos donde quede un espacio libre en la primera fila se genera entonces un bloque nuevo con un valor aleatorio de los siguientes: 2, 4, 8, 16, 32 y 64.
 */
-caida(Grid, RGrid2) :-
-	separarEnColumnas(Grid, Cols),
+caida(Grid, NumOfColumns, RGrid2) :-
+	separarEnColumnas(Grid, NumOfColumns, 0, Cols) ,
 	Cols = [C | _],
 	length(C, NumOfRows),
 	caidaEnColumnas(Cols, NumOfRows, RCols),
-	concatenarColumnas(RCols, RGrid2).
+	concatenarColumnas(RCols, NumOfColumns, NumOfRows, 0, RGrid2).
 
 /**
  * separarEnColumnas(+Grid, -Columns).
  * Separa la grilla Grid en columnas, en una lista de listas (columnas) Columns.
 */ 
-separarEnColumnas(Grid, Columns) :-
-	Grid = [],
-	Columns = [[], [], [], [], []].
+separarEnColumnas(Grid, NumOfColumns, NCol, Columns) :-
+	NCol is NumOfColumns,
+	Columns = [].
 
-separarEnColumnas(Grid, Columns) :-
-	Grid = [G0, G1, G2, G3, G4 | Gs],
-	Columns = [[G0 | C0s], [G1 | C1s], [G2 | C2s], [G3 | C3s], [G4 | C4s]],
-	separarEnColumnas(Gs, [C0s, C1s, C2s, C3s, C4s]).
+separarEnColumnas(Grid, NumOfColumns, NCol, Columns) :-
+	Columns = [C | Cs],
+	Pos = 0,
+	separarEnColumnasAux(Grid, NumOfColumns, NCol, Pos, C),
+	NColSig is NCol + 1,
+	separarEnColumnas(Grid, NumOfColumns, NColSig, Cs).
+
+separarEnColumnasAux(Grid, NumOfColumns, NCol, Pos, Col) :-
+	Grid = [],
+	Col = [].
+
+separarEnColumnasAux(Grid, NumOfColumns, NCol, Pos, Col) :-
+	Grid = [G | Gs],
+	NCol is Pos mod NumOfColumns,
+	Col = [G | Cs],
+	PosSig is Pos + 1,
+	separarEnColumnasAux(Gs, NumOfColumns, NCol, PosSig, Cs).
+
+separarEnColumnasAux(Grid, NumOfColumns, NCol, Pos, Col) :-
+	Grid = [_ | Gs],
+	PosSig is Pos + 1,
+	separarEnColumnasAux(Gs, NumOfColumns, NCol, PosSig, Col).
 
 /**
  * caidaEnColumnas(+Cols, +NumOfRows, -RCols).
@@ -174,14 +192,32 @@ agregarRandomsAux(Col, RandomsToAdd, Options, RCol) :-
  * concatenarColumnas(+Cols, -RGrid).
  * Concatena las columnas de la lista Cols en la grilla RGrid.
 */ 
-concatenarColumnas(Cols, RGrid) :-
-	Cols = [[], [], [], [], []],
-	RGrid = [].
+concatenarColumnas(Cols, NumOfColumns, NumOfRows, NCol, RGrid) :-
+	NCol is NumOfColumns,
+	T is NumOfColumns*NumOfRows,
+	length(RGrid, T).
 
-concatenarColumnas(Cols, RGrid) :-
-	Cols = [[C0 | C0s], [C1 | C1s], [C2 | C2s], [C3 | C3s], [C4 | C4s]],
-	RGrid = [C0, C1, C2, C3, C4 | Rs],
-	concatenarColumnas([C0s, C1s, C2s, C3s, C4s], Rs).
+concatenarColumnas(Cols, NumOfColumns, NumOfRows, NCol, RGrid) :-
+	Cols = [C | Cs],
+	Pos = 0,
+	concatenarColumnasAux(C, NumOfColumns, NCol, Pos, RGrid),
+	NColSig is NCol + 1,
+	concatenarColumnas(Cs, NumOfColumns, NumOfRows, NColSig, RGrid).
+
+concatenarColumnasAux(Col, NumOfColumns, NCol, Pos, RGrid) :-
+	Col = [].
+	
+concatenarColumnasAux(Col, NumOfColumns, NCol, Pos, RGrid) :-
+	Col = [C | Cs],
+	NCol is Pos mod NumOfColumns,
+	RGrid = [C | RGs],
+	PosSig is Pos + 1,
+	concatenarColumnasAux(Cs, NumOfColumns, NCol, PosSig, RGs).
+
+concatenarColumnasAux(Col, NumOfColumns, NCol, Pos, RGrid) :-
+	RGrid = [_ | RGs],
+	PosSig is Pos + 1,
+	concatenarColumnasAux(Col, NumOfColumns, NCol, PosSig, RGs).
 
 /**
  * boosterColapsarIguales(+Grid, +NumOfColumns, -RGrids)
@@ -194,7 +230,7 @@ boosterColapsarIguales(Grid, NumOfColumns, RGrids) :-
 	RGrids = [RGrid1, RGrid2],
 	identificarGrupos(Grid, NumOfColumns, RPaths),
 	colapsarGrupos(Grid, NumOfColumns, RPaths, RGrid1),
-	caida(RGrid1, RGrid2).
+	caida(RGrid1, NumOfColumns, RGrid2).
 
 /**
  * identificarGrupos(+Grid, +NumOfColumns, -RPaths)
@@ -325,3 +361,8 @@ masAbajoYDerecha([Fila1, Col1], [Fila2, Col2]) :-
 */ 
 insertar_final(A, [], [A]).
 insertar_final(A, [E|L1], [E|L2]) :-  insertar_final(A, L1, L2).
+
+
+
+/*ayudaMovidaMaxima() :-
+*/	

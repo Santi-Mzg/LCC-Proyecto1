@@ -3,7 +3,9 @@ import PengineClient from './PengineClient';
 import Board from './Board';
 import { joinResult } from './util';
 import HeaderDisplay from './HeaderDisplay';
-import ButtonBooster from './ButtonBooster';
+import BoosterButton from './BoosterButton';
+import MovidaMaximaButton from './MovidaMaximaButton';
+import MaximosIgualesAdyacentesButton from './MaximosIgualesAdyacentesButton';
 
 let pengine;
 
@@ -45,7 +47,7 @@ function Game() {
     if (waiting) {
       return;
     }
-    if (newPath.length === 0) { // Caso en donde se cancela el recorrido Path.
+    if (newPath.length <= 1) { // Caso en donde se cancela el recorrido Path.
       setDrawingPath(false);
     }
     else {
@@ -123,6 +125,14 @@ function Game() {
     });
   }
 
+  function movidaMaxima() {
+
+  }
+
+  function maximosIgualesAdyacentes() {
+
+  }
+
   if (grid === null) {
     return null;
   }
@@ -144,8 +154,16 @@ function Game() {
           onDone={onPathDone}
         />
       <div className="keypad"> 
-        <ButtonBooster
+        <BoosterButton
           onClick={boosterColapsarIguales}
+          disabled={drawingPath || waiting} // Si se está marcando un camino o se está esperando una respuesta de Prolog entonces desactiva el botón.
+        />
+        <MovidaMaximaButton
+          onClick={movidaMaxima}
+          disabled={drawingPath || waiting} // Si se está marcando un camino o se está esperando una respuesta de Prolog entonces desactiva el botón.
+        />
+        <MaximosIgualesAdyacentesButton
+          onClick={maximosIgualesAdyacentes}
           disabled={drawingPath || waiting} // Si se está marcando un camino o se está esperando una respuesta de Prolog entonces desactiva el botón.
         />
       </div>

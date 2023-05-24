@@ -109,7 +109,7 @@ body {
   padding: 5px 5px;
 }
 
-.buttonBooster {
+.boosterButton {
   background-color: #d2682b;
   border: none;
   color: white;
@@ -123,6 +123,42 @@ body {
   cursor: pointer;
 }
 
-.buttonBooster[disabled] {
+.boosterButton[disabled] {
+  background-color: #d2682b74;
+}
+
+.movidaMaximaButton {
+  background-color: #d2682b;
+  border: none;
+  color: white;
+  padding: 16px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.movidaMaximaButton[disabled] {
+  background-color: #d2682b74;
+}
+
+.maximosIgualesAdyacentesButton {
+  background-color: #d2682b;
+  border: none;
+  color: white;
+  padding: 16px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.maximosIgualesAdyacentesButton[disabled] {
   background-color: #d2682b74;
 }
