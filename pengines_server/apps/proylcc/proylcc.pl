@@ -88,6 +88,7 @@ siguientePotenciaDe2(FVal, P, Res) :-
 	Res >= FVal.
 
 siguientePotenciaDe2(FVal, P, Res) :-
+	FVal > 2^P,
 	PS is P+1,
 	siguientePotenciaDe2(FVal, PS, Res).
 
@@ -120,7 +121,7 @@ caida(Grid, NumOfColumns, RGrid2) :-
  * separarEnColumnas(+Grid, -Columns).
  * Separa la grilla Grid en columnas, en una lista de listas (columnas) Columns.
 */ 
-separarEnColumnas(Grid, NumOfColumns, NCol, Columns) :-
+separarEnColumnas(_Grid, NumOfColumns, NCol, Columns) :-
 	NCol is NumOfColumns,
 	Columns = [].
 
@@ -131,7 +132,7 @@ separarEnColumnas(Grid, NumOfColumns, NCol, Columns) :-
 	NColSig is NCol + 1,
 	separarEnColumnas(Grid, NumOfColumns, NColSig, Cs).
 
-separarEnColumnasAux(Grid, NumOfColumns, NCol, Pos, Col) :-
+separarEnColumnasAux(Grid,_NumOfColumns, _NCol, _Pos, Col) :-
 	Grid = [],
 	Col = [].
 
@@ -192,7 +193,7 @@ agregarRandomsAux(Col, RandomsToAdd, Options, RCol) :-
  * concatenarColumnas(+Cols, -RGrid).
  * Concatena las columnas de la lista Cols en la grilla RGrid.
 */ 
-concatenarColumnas(Cols, NumOfColumns, NumOfRows, NCol, RGrid) :-
+concatenarColumnas(_Cols, NumOfColumns, NumOfRows, NCol, RGrid) :-
 	NCol is NumOfColumns,
 	T is NumOfColumns*NumOfRows,
 	length(RGrid, T).
@@ -204,7 +205,7 @@ concatenarColumnas(Cols, NumOfColumns, NumOfRows, NCol, RGrid) :-
 	NColSig is NCol + 1,
 	concatenarColumnas(Cs, NumOfColumns, NumOfRows, NColSig, RGrid).
 
-concatenarColumnasAux(Col, NumOfColumns, NCol, Pos, RGrid) :-
+concatenarColumnasAux(Col, _NumOfColumns, _NCol, _Pos, _RGrid) :-
 	Col = [].
 	
 concatenarColumnasAux(Col, NumOfColumns, NCol, Pos, RGrid) :-
@@ -279,7 +280,7 @@ buscarAdyacentes(Grid, GridOrig, NumOfColumns, Pos, LMarcadosTemp, LMarcadosGlob
 % No es adyacente y no quedan más adyacentes por recorrer.
 buscarAdyacentesAux(_E, Grid, _GridOrig, NumOfColumns, FilaOrig, ColOrig, Pos, LMarcadosTemp, LMarcadosGlobal, LAdy) :-
 	PosOrig is FilaOrig*NumOfColumns + ColOrig,
-	(Pos > PosOrig + 6; Grid=[]), % Corta primero si se va del grupo de adyacentes o si se acaba la grilla.
+	(Pos > PosOrig + NumOfColumns + 1; Grid=[]), % Corta primero si se va del grupo de adyacentes o si se acaba la grilla.
 	LAdy = [],
 	LMarcadosGlobal = LMarcadosTemp.
 
@@ -335,7 +336,7 @@ colapsarGrupos(Grid, NumOfColumns, RPaths, RGrid1) :-
 ordenarPath(Path, RPath) :-
 	max_member(masAbajoYDerecha, RPos, Path),
 	delete(Path, RPos, PathAux),
-	insertar_final(RPos, PathAux, RPath).
+	insertarFinal(RPos, PathAux, RPath).
 	
 /**
  * masAbajoYDerecha(+Pos1, +Pos2)
@@ -356,13 +357,106 @@ masAbajoYDerecha([Fila1, Col1], [Fila2, Col2]) :-
 	Fila2 > Fila1.
 
 /**
- * insertar_final(+A, +L1, -L2)
+ * insertarFinal(+A, +L1, -L2)
  * Inserta el elemento A al final de la lista L1, resultando L2.
 */ 
-insertar_final(A, [], [A]).
-insertar_final(A, [E|L1], [E|L2]) :-  insertar_final(A, L1, L2).
+insertarFinal(A, [], [A]).
+insertarFinal(A, [E|L1], [E|L2]) :-  insertarFinal(A, L1, L2).
 
 
+%[64,4,64,32,16, 64,8,16,2,32, 2,4,64,64,2, 2,4,32,16,4, 16,4,16,16,16 ,16,64,2,32,32, 64,2,64,32,64, 32,2,64,32,4]
 
-/*ayudaMovidaMaxima() :-
-*/	
+/**
+ * movidaMaxima(+Grid, +NumOfColumns, -MovidaMaxima)
+ * 
+*/ 
+movidaMaxima(Grid, NumOfColumns, MovidaMaxima) :-
+	identificarMovidasMaximas(Grid, Grid, NumOfColumns, 0, RPaths, RVals),
+	seleccionarMovidaMaxima(RPaths, RVals, MovidaMaximaInv),
+	reverse(MovidaMaximaInv, MovidaMaxima).
+	
+seleccionarMovidaMaxima(RPaths, RVals, MovidaMaxima) :-
+	max_list(RVals, ValMovidaMaxima),
+	nth0(Index, RVals, ValMovidaMaxima),
+	nth0(Index, RPaths, MovidaMaxima).
+
+% Se recorrieton todos los bloques de la grilla.
+identificarMovidasMaximas(Grid, _GridOrig, _NumOfColumns, _Pos, RPaths, RVals) :-   
+	Grid = [],
+	RPaths = [],
+	RVals = [].
+
+% Se le busca grupo al bloque en cuestión.
+identificarMovidasMaximas(Grid, GridOrig, NumOfColumns, Pos, RPaths, RVals) :- 
+	Grid = [_ | Gs],
+	RPaths = [MejorMovida | RPs],
+	RVals = [ValMejorMovida | RVs],
+	LMarcadosTemp = [],
+	MovidaActual = [],
+	MejorMovidaActual = [],
+	ValMovidaActual = 0,
+	ValMejorMovidaActual = 0,
+	buscarMovidasEnPos(Grid, GridOrig, NumOfColumns, Pos, LMarcadosTemp, MovidaActual, ValMovidaActual, MejorMovidaActual, ValMejorMovidaActual, MejorMovida, ValMejorMovida), 
+	PosSig is Pos + 1,
+	identificarMovidasMaximas(Gs, GridOrig, NumOfColumns, PosSig, RPs, RVs).
+
+/**
+ * buscarMovidasEnPos(+Grid, +GridOrig, +NumOfColumns, +Pos, +LMarcadosTemp, -LMarcadosGlobal, -LAdy)
+ * Busca el grupo de bloques adyacentes e iguales LAdy partiendo de la posición Pos en la grilla GridOriginal correspondiente a la primera posición de la grilla Grid de número de columnas NumOfColums.
+ * LMarcadosTemp es la lista de bloques visitados que se utiliza para chequear y LMarcadosGlobal es la lista de bloques visitados que se obtiene al finalizar.
+*/ 
+buscarMovidasEnPos(Grid, GridOrig, NumOfColumns, Pos, LMarcadosTemp, MovidaActual, ValMovidaActual, MejorMovidaActual, ValMejorMovidaActual, MejorMovida, ValMejorMovida) :-
+	Grid = [G | _],
+	Fila is Pos // NumOfColumns,
+	Col is Pos - Fila*NumOfColumns,
+	MovidaActualN = [[Fila, Col] | MovidaActual],
+	ValMovidaActualN is ValMovidaActual + G, 
+	LMarcadosTempN = [Pos | LMarcadosTemp],
+	PosInicial = 0,
+	buscarMovidasEnPosAux(G, GridOrig, GridOrig, NumOfColumns, Fila, Col, PosInicial, LMarcadosTempN, MovidaActualN, ValMovidaActualN, MejorMovidaActual, ValMejorMovidaActual, MejorMovida, ValMejorMovida). 
+
+buscarMovidasEnPosAux(_E, Grid, _GridOrig, NumOfColumns, FilaOrig, ColOrig, Pos, _LMarcadosTemp, MovidaActual, _ValMovidaActual, MejorMovidaActual, ValMejorMovidaActual, MejorMovida, ValMejorMovida) :-
+	PosOrig is FilaOrig*NumOfColumns + ColOrig,
+	(Pos > PosOrig + NumOfColumns + 1; Grid=[]), % Corta primero si se va del grupo de adyacentes o si se acaba la grilla.
+	length(MovidaActual, L),
+	L < 2,
+	ValMejorMovida = ValMejorMovidaActual,
+	MejorMovida = MejorMovidaActual.
+
+% Se terminan de definir las listas de movidas y valores, y se le asigna valor 0 a los caminos de 1 bloque de largo para evitar su selección.
+buscarMovidasEnPosAux(_E, Grid, _GridOrig, NumOfColumns, FilaOrig, ColOrig, Pos, _LMarcadosTemp, _MovidaActual, ValMovidaActual, MejorMovidaActual, ValMejorMovidaActual, MejorMovida, ValMejorMovida) :-
+	PosOrig is FilaOrig*NumOfColumns + ColOrig,
+	(Pos > PosOrig + NumOfColumns + 1; Grid=[]), % Corta primero si se va del grupo de adyacentes o si se acaba la grilla.
+	siguientePotenciaDe2(ValMovidaActual, 2, ValMovidaActualP),
+	ValMovidaActualP =< ValMejorMovidaActual,
+	ValMejorMovida = ValMejorMovidaActual,
+	MejorMovida = MejorMovidaActual.
+
+% Se agrega el movimiento a la lista de movidas y también el valor de esa movida a la lista de valores.
+buscarMovidasEnPosAux(_E, Grid, _GridOrig, NumOfColumns, FilaOrig, ColOrig, Pos, _LMarcadosTemp, MovidaActual, ValMovidaActual, _MejorMovidaActual, ValMejorMovidaActual, MejorMovida, ValMejorMovida) :-
+	PosOrig is FilaOrig*NumOfColumns + ColOrig,
+	(Pos > PosOrig + NumOfColumns + 1; Grid=[]), % Corta primero si se va del grupo de adyacentes o si se acaba la grilla.
+	siguientePotenciaDe2(ValMovidaActual, 2, ValMovidaActualP),
+	ValMovidaActualP > ValMejorMovidaActual,
+	ValMejorMovida = ValMovidaActualP,
+	MejorMovida = MovidaActual.
+
+% Si es adyacente, igual y no está marcado entonces busca sus adyacentes propios.
+buscarMovidasEnPosAux(E, Grid, GridOrig, NumOfColumns, FilaOrig, ColOrig, Pos, LMarcadosTemp, MovidaActual, ValMovidaActual, MejorMovidaActual, ValMejorMovidaActual, MejorMovida, ValMejorMovida) :-
+	Fila is Pos // NumOfColumns,
+	Col is Pos - Fila*NumOfColumns,
+	1 >= abs(Fila - FilaOrig),
+	1 >= abs(Col - ColOrig),
+	\+ member(Pos, LMarcadosTemp), % Si no pertenece a la lista de marcados.
+	E2 is 2*E, % Siguiente potencia de 2.
+	length(LMarcadosTemp, LengthPath),
+	(Grid = [E | Gs]; (LengthPath > 1, Grid = [E2 | Gs])), % Si el adyacente es igual o, es la siguiente potencia de dos y además no es el segundo bloque del camino.
+	buscarMovidasEnPos(Grid, GridOrig, NumOfColumns, Pos, LMarcadosTemp, MovidaActual, ValMovidaActual, MejorMovidaActual, ValMejorMovidaActual, MejorMovidaTemp, ValMejorMovidaTemp),
+	PosSig is Pos + 1,
+	buscarMovidasEnPosAux(E, Gs, GridOrig, NumOfColumns, FilaOrig, ColOrig, PosSig, LMarcadosTemp, MovidaActual, ValMovidaActual, MejorMovidaTemp, ValMejorMovidaTemp, MejorMovida, ValMejorMovida).
+
+% Sino sigue recorriendo.
+buscarMovidasEnPosAux(E, Grid, GridOrig, NumOfColumns, FilaOrig, ColOrig, Pos, LMarcadosTemp, MovidaActual, ValMovidaActual, MejorMovidaActual, ValMejorMovidaActual, MejorMovida, ValMejorMovida) :-
+	Grid = [_ | Gs],
+	PosSig is Pos + 1,
+	buscarMovidasEnPosAux(E, Gs, GridOrig, NumOfColumns, FilaOrig, ColOrig, PosSig, LMarcadosTemp, MovidaActual, ValMovidaActual, MejorMovidaActual, ValMejorMovidaActual, MejorMovida, ValMejorMovida).

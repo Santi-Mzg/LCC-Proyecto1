@@ -126,7 +126,16 @@ function Game() {
   }
 
   function movidaMaxima() {
-
+    const gridS = JSON.stringify(grid);
+    const queryS = "movidaMaxima(" + gridS + "," + numOfColumns + ", MovidaMaxima)";
+    setWaiting(true);
+    pengine.query(queryS, (success, response) => {
+      if (success) {
+        onPathChange(response['MovidaMaxima']);
+      } else {
+        setWaiting(false);
+      }
+    });
   }
 
   function maximosIgualesAdyacentes() {
