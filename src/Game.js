@@ -47,7 +47,7 @@ function Game() {
     if (waiting) {
       return;
     }
-    if (newPath.length <= 1) { // Caso en donde se cancela el recorrido Path.
+    if (newPath.length === 0) { // Caso en donde se cancela el recorrido Path.
       setDrawingPath(false);
     }
     else {
@@ -128,13 +128,11 @@ function Game() {
   function movidaMaxima() {
     const gridS = JSON.stringify(grid);
     const queryS = "movidaMaxima(" + gridS + "," + numOfColumns + ", MovidaMaxima)";
-    setWaiting(true);
     pengine.query(queryS, (success, response) => {
       if (success) {
         onPathChange(response['MovidaMaxima']);
-      } else {
-        setWaiting(false);
-      }
+        setDrawingPath(true);
+      } 
     });
   }
 

@@ -401,7 +401,7 @@ identificarMovidasMaximas(Grid, GridOrig, NumOfColumns, Pos, RPaths, RVals) :-
 	identificarMovidasMaximas(Gs, GridOrig, NumOfColumns, PosSig, RPs, RVs).
 
 /**
- * buscarMovidasEnPos(+Grid, +GridOrig, +NumOfColumns, +Pos, +LMarcadosTemp, -LMarcadosGlobal, -LAdy)
+ * buscarMovidasEnPos(+Grids, +GridOrig, +NumOfColumns, +Pos, +LMarcadosTemp, -LMarcadosGlobal, -LAdy)
  * Busca el grupo de bloques adyacentes e iguales LAdy partiendo de la posición Pos en la grilla GridOriginal correspondiente a la primera posición de la grilla Grid de número de columnas NumOfColums.
  * LMarcadosTemp es la lista de bloques visitados que se utiliza para chequear y LMarcadosGlobal es la lista de bloques visitados que se obtiene al finalizar.
 */ 
