@@ -137,7 +137,14 @@ function Game() {
   }
 
   function maximosIgualesAdyacentes() {
-
+    const gridS = JSON.stringify(grid);
+    const queryS = "maximosIgualesAdyacentes(" + gridS + "," + numOfColumns + ", MovidaMaxima)";
+    pengine.query(queryS, (success, response) => {
+      if (success) {
+        onPathChange(response['MovidaMaxima']);
+        setDrawingPath(true);
+      } 
+    });
   }
 
   if (grid === null) {
