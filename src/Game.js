@@ -56,6 +56,7 @@ function Game() {
     setPath(newPath);
     setNextSquareValue(joinResult(newPath, grid, numOfColumns)); // Actualiza el valor que se va "generando" al ir conectando bloques progresivamente.
     console.log(JSON.stringify(newPath));
+    console.log(JSON.stringify(grid));
   }
 
   /**
